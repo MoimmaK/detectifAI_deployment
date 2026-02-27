@@ -8,7 +8,7 @@ const FLASK_API_URL = process.env.FLASK_API_URL || 'http://localhost:5000'
 
 // Configure route for long-running report generation
 // Report generation can take 10-20+ minutes for complex videos (LLM loading + processing + MinIO upload)
-export const maxDuration = 2700 // 45 minutes (increased for complex videos with many events)
+export const maxDuration = 300 // 5 minutes (Vercel hobby plan max)
 export const dynamic = 'force-dynamic'
 
 // Custom fetch with extended timeout for long-running requests
