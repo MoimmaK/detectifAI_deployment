@@ -1,0 +1,14 @@
+{
+  "video": "D:\\FAST\\Final Year Project\\sem1_finalized\\sem1\\backend\\100 Yard Pistol Shot Using Super Cheap Pistol.mp4",
+  "model": "D:\\FAST\\Final Year Project\\sem1_finalized\\sem1\\backend\\behavior_analysis\\wallclimb.pt",
+  "frames_processed": 1,
+  "processing_time": 24.303637742996216,
+  "predictions": [
+    {
+      "timestamp": 15.189704384983893,
+      "frame_index": 910,
+      "label": "climbing",
+      "confidence": 0.8232399821281433
+    }
+  ]
+}

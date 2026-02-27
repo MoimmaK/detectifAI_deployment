@@ -1,0 +1,7 @@
+{
+  "video": "D:\\FAST\\Final Year Project\\sem1_finalized\\sem1\\backend\\fire.mp4",
+  "model": "D:\\FAST\\Final Year Project\\sem1_finalized\\sem1\\backend\\behavior_analysis\\yolov11_wallclimb.pt",
+  "frames_processed": 0,
+  "processing_time": 5.750753879547119,
+  "predictions": []
+}

@@ -1,0 +1,86 @@
+{
+  "video": "D:\\FAST\\Final Year Project\\sem1_finalized\\sem1\\backend\\gun.mp4",
+  "model": "D:\\FAST\\Final Year Project\\sem1_finalized\\sem1\\backend\\behavior_analysis\\yolov11_wallclimb.pt",
+  "frames_processed": 13,
+  "processing_time": 1.5615730285644531,
+  "predictions": [
+    {
+      "timestamp": 0.0,
+      "frame_index": 0,
+      "label": "climbing",
+      "confidence": 0.83544921875
+    },
+    {
+      "timestamp": 0.16666666666666666,
+      "frame_index": 5,
+      "label": "climbing",
+      "confidence": 0.8312371373176575
+    },
+    {
+      "timestamp": 0.3333333333333333,
+      "frame_index": 10,
+      "label": "climbing",
+      "confidence": 0.8473426103591919
+    },
+    {
+      "timestamp": 0.5,
+      "frame_index": 15,
+      "label": "climbing",
+      "confidence": 0.8526327013969421
+    },
+    {
+      "timestamp": 0.6666666666666666,
+      "frame_index": 20,
+      "label": "climbing",
+      "confidence": 0.8398666381835938
+    },
+    {
+      "timestamp": 1.0,
+      "frame_index": 30,
+      "label": "climbing",
+      "confidence": 0.8417007923126221
+    },
+    {
+      "timestamp": 1.1666666666666667,
+      "frame_index": 35,
+      "label": "climbing",
+      "confidence": 0.8437712788581848
+    },
+    {
+      "timestamp": 1.3333333333333333,
+      "frame_index": 40,
+      "label": "climbing",
+      "confidence": 0.849401593208313
+    },
+    {
+      "timestamp": 1.6666666666666667,
+      "frame_index": 50,
+      "label": "climbing",
+      "confidence": 0.8487818837165833
+    },
+    {
+      "timestamp": 1.8333333333333333,
+      "frame_index": 55,
+      "label": "climbing",
+      "confidence": 0.8401097655296326
+    },
+    {
+      "timestamp": 2.0,
+      "frame_index": 60,
+      "label": "climbing",
+      "confidence": 0.8544566631317139
+    },
+    {
+      "timestamp": 2.1666666666666665,
+      "frame_index": 65,
+      "label": "climbing",
+      "confidence": 0.8480550646781921
+    },
+    {
+      "timestamp": 2.5,
+      "frame_index": 75,
+      "label": "climbing",
+      "confidence": 0.8492255806922913
+    }
+  ]
+}

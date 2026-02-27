@@ -1,0 +1,34 @@
+# Core dependencies
+torch>=1.9.0
+torchvision>=0.10.0
+transformers>=4.20.0
+sentence-transformers>=2.2.0
+Pillow>=8.3.0
+numpy>=1.21.0
+
+# Optional GPU support
+# torch>=1.9.0+cu111 -f https://download.pytorch.org/whl/torch_stable.html
+
+# Database and storage
+sqlite3  # Built into Python
+pickle   # Built into Python
+
+# Async support
+asyncio  # Built into Python
+
+# Logging and utilities
+logging  # Built into Python
+pathlib  # Built into Python
+dataclasses  # Built into Python (Python 3.7+)
+typing    # Built into Python
+uuid      # Built into Python
+datetime  # Built into Python
+time      # Built into Python
+json      # Built into Python
+os        # Built into Python
+
+# Development and testing (optional)
+pytest>=6.0.0
+pytest-asyncio>=0.18.0
+black>=21.0.0
+flake8>=3.9.0

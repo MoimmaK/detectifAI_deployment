@@ -1,0 +1,44 @@
+{
+  "video": "D:\\FAST\\Final Year Project\\sem1_finalized\\sem1\\backend\\How to Climb a Fence! #shorts.mp4",
+  "model": "D:\\FAST\\Final Year Project\\sem1_finalized\\sem1\\backend\\behavior_analysis\\wallclimb.pt",
+  "frames_processed": 6,
+  "processing_time": 2.811400890350342,
+  "predictions": [
+    {
+      "timestamp": 9.333333333333334,
+      "frame_index": 280,
+      "label": "climbing",
+      "confidence": 0.8285207748413086
+    },
+    {
+      "timestamp": 9.5,
+      "frame_index": 285,
+      "label": "climbing",
+      "confidence": 0.8335031867027283
+    },
+    {
+      "timestamp": 9.666666666666666,
+      "frame_index": 290,
+      "label": "climbing",
+      "confidence": 0.8392189741134644
+    },
+    {
+      "timestamp": 10.166666666666666,
+      "frame_index": 305,
+      "label": "climbing",
+      "confidence": 0.8279006481170654
+    },
+    {
+      "timestamp": 10.333333333333334,
+      "frame_index": 310,
+      "label": "climbing",
+      "confidence": 0.826618492603302
+    },
+    {
+      "timestamp": 10.5,
+      "frame_index": 315,
+      "label": "climbing",
+      "confidence": 0.827635645866394
+    }
+  ]
+}

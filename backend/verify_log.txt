@@ -1,0 +1,63 @@
+Path: ['D:\\fyp\\sem1_finalized\\sem1\\backend', 'C:\\Program Files\\Python311\\python311.zip', 'C:\\Program Files\\Python311\\DLLs', 'C:\\Program Files\\Python311\\Lib', 'C:\\Program Files\\Python311', 'C:\\Users\\Lenovo\\AppData\\Roaming\\Python\\Python311\\site-packages', 'C:\\Program Files\\Python311\\Lib\\site-packages', 'C:\\Program Files\\Python311\\Lib\\site-packages\\vboxapi-1.0-py3.11.egg', 'D:\\fyp\\sem1_finalized\\sem1\\backend', 'D:\\fyp\\sem1_finalized\\sem1']
+Initializing Generator...
+INFO:backend.database.config:✅ MongoDB connection established successfully
+INFO:backend.report_generation.data_collector:✅ Connected to MongoDB via DatabaseManager
+INFO:backend.database.config:✅ MinIO video bucket exists: detectifai-videos
+INFO:backend.database.config:✅ MinIO keyframe bucket exists: detectifai-keyframes
+INFO:backend.database.config:✅ MinIO connection established successfully
+INFO:backend.report_generation.data_collector:✅ MinIO client available for Report generation
+INFO:backend.report_generation.llm_engine:Loading model from: D:\fyp\sem1_finalized\sem1\backend\report_generation\models\qwen2.5-3b-instruct-q4_k_m.gguf
+INFO:backend.report_generation.llm_engine:Model type: qwen
+llama_context: n_ctx_per_seq (4096) < n_ctx_train (32768) -- the full capacity of the model will not be utilized
+INFO:backend.report_generation.llm_engine:✅ Model loaded successfully
+INFO:backend.report_generation.report_builder:✅ Report generator initialized successfully
+Processing video video_20251115_230956_5d2672ea
+INFO:backend.report_generation.data_collector:Collecting all report data for video: video_20251115_230956_5d2672ea
+INFO:backend.report_generation.data_collector:Collected 1 events for video video_20251115_230956_5d2672ea
+INFO:backend.report_generation.data_collector:Collected 0 keyframes for video video_20251115_230956_5d2672ea
+INFO:backend.report_generation.data_collector:Collected 0 face detections for video video_20251115_230956_5d2672ea
+INFO:backend.report_generation.data_collector:Collected 0 captions for video video_20251115_230956_5d2672ea
+INFO:backend.report_generation.data_collector:Report data collection complete: 1 events, 0 keyframes, 0 faces
+Metadata Video URL: NOT FOUND
+No keyframes found
+INFO:backend.report_generation.report_builder:Generating report for video: video_20251115_230956_5d2672ea
+INFO:backend.report_generation.data_collector:Collecting all report data for video: video_20251115_230956_5d2672ea
+INFO:backend.report_generation.data_collector:Collected 1 events for video video_20251115_230956_5d2672ea
+INFO:backend.report_generation.data_collector:Collected 0 keyframes for video video_20251115_230956_5d2672ea
+INFO:backend.report_generation.data_collector:Collected 0 face detections for video video_20251115_230956_5d2672ea
+INFO:backend.report_generation.data_collector:Collected 0 captions for video video_20251115_230956_5d2672ea
+INFO:backend.report_generation.data_collector:Report data collection complete: 1 events, 0 keyframes, 0 faces
+INFO:backend.report_generation.report_builder:📝 Generating executive summary...
+INFO:backend.report_generation.report_builder:🤖 Calling LLM for executive summary...
+Traceback (most recent call last):
+  File "D:\fyp\sem1_finalized\sem1\backend\verify_minio_links.py", line 96, in <module>
+    html_path = gen.export_html(report, output_path=os.path.join(output_dir, f"report_{vid}.html"))
+    ^^^^^^
+  File "D:\fyp\sem1_finalized\sem1\backend\verify_minio_links.py", line 72, in test
+    if data['faces']:
+             ^^^^^^^^^
+  File "D:\fyp\sem1_finalized\sem1\backend\report_generation\report_builder.py", line 175, in generate_report
+    sections.append(self._generate_executive_summary(report_data))
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\fyp\sem1_finalized\sem1\backend\report_generation\report_builder.py", line 314, in _generate_executive_summary
+    result = self.llm_engine.generate(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\fyp\sem1_finalized\sem1\backend\report_generation\llm_engine.py", line 219, in generate
+    output = self.model(
+             ^^^^^^^^^^^
+  File "C:\Users\Lenovo\AppData\Roaming\Python\Python311\site-packages\llama_cpp\llama.py", line 1904, in __call__
+    return self.create_completion(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Lenovo\AppData\Roaming\Python\Python311\site-packages\llama_cpp\llama.py", line 1837, in create_completion
+    completion: Completion = next(completion_or_chunks)  # type: ignore
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Lenovo\AppData\Roaming\Python\Python311\site-packages\llama_cpp\llama.py", line 1322, in _create_completion
+    for token in self.generate(
+  File "C:\Users\Lenovo\AppData\Roaming\Python\Python311\site-packages\llama_cpp\llama.py", line 914, in generate
+    self.eval(tokens)
+  File "C:\Users\Lenovo\AppData\Roaming\Python\Python311\site-packages\llama_cpp\llama.py", line 648, in eval
+    self._ctx.decode(self._batch)
+  File "C:\Users\Lenovo\AppData\Roaming\Python\Python311\site-packages\llama_cpp\_internals.py", line 322, in decode
+    return_code = llama_cpp.llama_decode(
+                  ^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt

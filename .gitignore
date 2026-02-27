@@ -1,0 +1,83 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# ── Node / Next.js ────────────────────────────────────────────
+node_modules/
+frontend/node_modules/
+/.next/
+/out/
+/build
+.vercel
+*.tsbuildinfo
+next-env.d.ts
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Python ────────────────────────────────────────────────────
+venv/
+.venv/
+backend/venv/
+backend/.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# ── Environment / Secrets ─────────────────────────────────────
+.env
+.env.*
+*.env
+.env.local
+backend/.env*
+client_secret_*.json
+
+# ── AI Models & Weights ───────────────────────────────────────
+*.pt
+*.pth
+*.pkl
+*.ckpt
+*.safetensors
+*.gguf
+*.onnx
+*.h5
+*.bin
+backend/models/
+backend/model/
+backend/report_generation/models/
+
+# ── Videos & Large Media ──────────────────────────────────────
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.webm
+
+# ── Video Processing Outputs ──────────────────────────────────
+backend/video_processing_outputs/
+video_processing_outputs/
+uploads/
+backend/uploads/
+backend/temp_faces/
+backend/video_captioning_store/
+
+# ── FAISS indexes (rebuilt from MongoDB at startup) ───────────
+*.faiss
+faiss_face_index.bin
+faiss_id_map.json
+
+# ── Archives ──────────────────────────────────────────────────
+*.zip
+
+# ── Logs ──────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── OS ────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ── Misc ──────────────────────────────────────────────────────
+minio-data/
+STRIPE_PAYMENT_INTEGRATION_PLAN.md

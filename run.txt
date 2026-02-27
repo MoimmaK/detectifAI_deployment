@@ -1,0 +1,51 @@
+# ===================================
+# DetectifAI - Quick Start Commands
+# ===================================
+
+# FRONTEND SETUP
+cd frontend
+npm install
+npm run dev
+# Frontend runs on: http://localhost:3000
+
+# BACKEND SETUP
+python -m pip install --upgrade pip
+cd backend
+python -m venv venv
+.\venv\Scripts\Activate
+pip install -r requirements.txt
+
+# Database setup (run once)
+cd DetectifAI_db
+python database_setup.py
+python migrate_stripe_integration.py
+python seed_stripe_plans.py
+cd ..
+
+# Start backend
+python app.py
+# Backend runs on: http://localhost:5000
+
+# ===================================
+# STRIPE WEBHOOK TESTING (Optional)
+# ===================================
+
+# Terminal 1: Forward webhooks
+stripe listen --forward-to localhost:5000/api/subscriptions/webhook
+# Copy the whsec_xxx secret to backend/.env
+
+# Terminal 2: Trigger test events
+stripe trigger customer.subscription.created
+stripe trigger invoice.payment_succeeded
+
+# ===================================
+# TESTING CHECKLIST
+# ===================================
+# 1. Visit http://localhost:3000/pricing
+# 2. Sign in with test account
+# 3. Click "Get Basic" or "Get Pro"
+# 4. Use test card: 4242 4242 4242 4242
+# 5. Complete checkout
+# 6. Verify subscription in database
+
+

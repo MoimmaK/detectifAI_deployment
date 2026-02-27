@@ -1,0 +1,38 @@
+[
+  {
+    "caption_id": "9a1c7b86-bcd5-4be0-9a1b-3634585c55ca",
+    "video_id": "fight_0002",
+    "frame_id": "frame_000000",
+    "timestamp": "2026-01-29T22:38:00"
+  },
+  {
+    "caption_id": "1054ccba-2925-446d-a598-ecc6c0931aaa",
+    "video_id": "fight_0002",
+    "frame_id": "frame_000292",
+    "timestamp": "2026-01-29T22:38:11.679999"
+  },
+  {
+    "caption_id": "b338d372-4879-4317-985d-d26295f2a0f1",
+    "video_id": "fight_0002",
+    "frame_id": "frame_000584",
+    "timestamp": "2026-01-29T22:38:23.359999"
+  },
+  {
+    "caption_id": "814d619d-d96f-4c99-9528-bb5e1eefb190",
+    "video_id": "fight_0002",
+    "frame_id": "frame_000000",
+    "timestamp": "2026-01-30T01:54:00"
+  },
+  {
+    "caption_id": "1c9121fb-427e-4e9e-bdf7-6c3ea75d80f8",
+    "video_id": "fight_0002",
+    "frame_id": "frame_000292",
+    "timestamp": "2026-01-30T01:54:11.679999"
+  },
+  {
+    "caption_id": "e102173f-eda0-4ab9-98d0-878929a85be9",
+    "video_id": "fight_0002",
+    "frame_id": "frame_000584",
+    "timestamp": "2026-01-30T01:54:23.359999"
+  }
+]
