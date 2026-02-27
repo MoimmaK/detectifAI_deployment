@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Env files
+.env
+.env.*
+
+# Model files (if large)
+*.pt
+*.pth
+*.bin
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+
+# Node (important)
+node_modules/
+.next/
+frontend/
