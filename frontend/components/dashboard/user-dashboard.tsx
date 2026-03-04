@@ -50,6 +50,7 @@ interface VideoResults {
   }>
   threat_assessment?: any
   compressed_video_url?: string
+  compressed_video_presigned_url?: string
   compressed_video_available?: boolean
   annotated_video_url?: string
   annotated_video_available?: boolean
@@ -92,6 +93,8 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
   const [processing, setProcessing] = useState(false)
   const [uploadStatus, setUploadStatus] = useState<string>("")
   const [currentVideoId, setCurrentVideoId] = useState<string | null>(null)
+  const videoRetryCount = useRef(0)
+  const MAX_VIDEO_RETRIES = 3
   const [videoResults, setVideoResults] = useState<VideoResults | null>(null)
   const [compressedVideoUrl, setCompressedVideoUrl] = useState<string | null>(null)
   const [annotatedVideoUrl, setAnnotatedVideoUrl] = useState<string | null>(null)
@@ -320,8 +323,10 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
 
       // Clear video URLs initially to prevent stale state
       setAnnotatedVideoUrl(null)
-      // Set compressed video URL tentatively, will be updated/confirmed by status
-      setCompressedVideoUrl(`/api/video/compressed/${videoId}`)
+      videoRetryCount.current = 0
+      // Don't set compressed video URL yet — wait for the status response
+      // to provide a presigned URL (avoids Vercel proxy issues)
+      setCompressedVideoUrl(null)
 
       // Step 1: Fetch video status (includes metadata)
       console.log('📊 Fetching status data...')
@@ -336,20 +341,17 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
       const statusData = await statusResponse.json()
       console.log('📊 Status data received:', JSON.stringify(statusData, null, 2))
 
-      // Update compressed video URL from status if available
-      if (statusData.compressed_video_url) {
-        // If it's a full URL, use it directly; otherwise use the API route
-        if (statusData.compressed_video_url.startsWith('http')) {
-          setCompressedVideoUrl(statusData.compressed_video_url)
-        } else {
-          // Use Next.js API route for proxying
-          setCompressedVideoUrl(`/api/video/compressed/${videoId}`)
-        }
-        console.log('✅ Updated compressed video URL from status:', statusData.compressed_video_url)
+      // Prefer presigned URL (direct from MinIO, avoids Vercel proxy size limits + redirect issues)
+      if (statusData.compressed_video_presigned_url) {
+        setCompressedVideoUrl(statusData.compressed_video_presigned_url)
+        console.log('✅ Using presigned URL for compressed video')
+      } else if (statusData.compressed_video_url?.startsWith('http')) {
+        setCompressedVideoUrl(statusData.compressed_video_url)
+        console.log('✅ Using direct URL for compressed video')
       } else {
-        // Fallback: always try the API route
-        setCompressedVideoUrl(`/api/video/compressed/${videoId}`)
-        console.log('✅ Using default compressed video URL')
+        const apiBase = process.env.NEXT_PUBLIC_API_URL || ''
+        setCompressedVideoUrl(`${apiBase}/api/v3/video/compressed/${videoId}`)
+        console.log('✅ Using backend direct URL for compressed video')
       }
 
       // Step 2: Try to fetch comprehensive results with proper error handling
@@ -362,13 +364,12 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
           videoResultsData = await resultsResponse.json() as VideoResults
           console.log('📋 Comprehensive results received:', JSON.stringify(videoResultsData, null, 2))
 
-          // Update compressed video URL from results if available
-          if (videoResultsData.compressed_video_url) {
-            if (videoResultsData.compressed_video_url.startsWith('http')) {
-              setCompressedVideoUrl(videoResultsData.compressed_video_url)
-            } else {
-              setCompressedVideoUrl(`/api/video/compressed/${videoId}`)
-            }
+          // Update compressed video URL from results if available (prefer presigned)
+          if (videoResultsData.compressed_video_presigned_url) {
+            setCompressedVideoUrl(videoResultsData.compressed_video_presigned_url)
+            console.log('✅ Updated compressed video URL from results (presigned)')
+          } else if (videoResultsData.compressed_video_url?.startsWith('http')) {
+            setCompressedVideoUrl(videoResultsData.compressed_video_url)
             console.log('✅ Updated compressed video URL from results')
           }
         } else {
@@ -526,29 +527,26 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
 
     } catch (err) {
       console.error('❌ Error fetching video results:', err)
-      // Still try to set basic info from status if available
       try {
         const statusResponse = await fetch(`/api/video/status/${videoId}`)
         if (statusResponse.ok) {
           const statusData = await statusResponse.json()
-          if (statusData.compressed_video_url) {
-            if (statusData.compressed_video_url.startsWith('http')) {
-              setCompressedVideoUrl(statusData.compressed_video_url)
-            } else {
-              setCompressedVideoUrl(`/api/video/compressed/${videoId}`)
-            }
+          if (statusData.compressed_video_presigned_url) {
+            setCompressedVideoUrl(statusData.compressed_video_presigned_url)
+          } else if (statusData.compressed_video_url?.startsWith('http')) {
+            setCompressedVideoUrl(statusData.compressed_video_url)
           } else {
-            // Always try the API route as fallback
-            setCompressedVideoUrl(`/api/video/compressed/${videoId}`)
+            const apiBase = process.env.NEXT_PUBLIC_API_URL || ''
+            setCompressedVideoUrl(`${apiBase}/api/v3/video/compressed/${videoId}`)
           }
         } else {
-          // Even if status fails, try the API route
-          setCompressedVideoUrl(`/api/video/compressed/${videoId}`)
+          const apiBase = process.env.NEXT_PUBLIC_API_URL || ''
+          setCompressedVideoUrl(`${apiBase}/api/v3/video/compressed/${videoId}`)
         }
       } catch (statusErr) {
         console.error('❌ Failed to fetch status as fallback:', statusErr)
-        // Still try the API route
-        setCompressedVideoUrl(`/api/video/compressed/${videoId}`)
+        const apiBase = process.env.NEXT_PUBLIC_API_URL || ''
+        setCompressedVideoUrl(`${apiBase}/api/v3/video/compressed/${videoId}`)
       }
     }
   }
@@ -646,9 +644,9 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
       setUploadStatus(`✅ Upload successful! Processing video...`)
       setCurrentVideoId(videoId)
 
-      // Immediately set compressed video URL (will be updated when processing completes)
-      console.log('🎬 Setting initial compressed video URL for:', videoId)
-      setCompressedVideoUrl(`/api/video/compressed/${videoId}`)
+      // Don't set video URL yet — wait until processing completes to avoid
+      // hammering the proxy while the video is still being processed.
+      videoRetryCount.current = 0
 
       // Poll for processing completion
       pollIntervalRef.current = setInterval(async () => {
@@ -708,10 +706,10 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
             } catch (fetchError) {
               console.error('Failed to fetch results:', fetchError)
               setUploadStatus("⚠️ Processing complete, but failed to load results")
-              // Still try to set compressed video URL even if fetch fails
               if (videoId) {
                 console.log('🔄 Setting compressed video URL as fallback')
-                setCompressedVideoUrl(`/api/video/compressed/${videoId}`)
+                const apiBase = process.env.NEXT_PUBLIC_API_URL || ''
+                setCompressedVideoUrl(`${apiBase}/api/v3/video/compressed/${videoId}`)
               }
             }
 
@@ -1013,27 +1011,29 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
                       currentSrc: videoEl.currentSrc
                     })
 
-                    // Fallback to compressed video if annotated fails
                     if (annotatedVideoUrl && compressedVideoUrl && videoEl.src.includes('annotated')) {
                       console.log('🔄 Annotated video failed, falling back to compressed...')
+                      videoRetryCount.current = 0
                       setTimeout(() => {
-                        if (currentVideoId) {
-                          videoEl.src = `/api/video/compressed/${currentVideoId}?t=${Date.now()}`
+                        if (compressedVideoUrl) {
+                          videoEl.src = compressedVideoUrl
                           videoEl.load()
                         }
                       }, 1000)
-                    } else if (error && error.code === 4) {
-                      console.log('🔄 Media source error, trying to reload...')
+                    } else if (error && videoRetryCount.current < MAX_VIDEO_RETRIES) {
+                      videoRetryCount.current += 1
+                      console.log(`🔄 Video error (code=${error.code}), retry ${videoRetryCount.current}/${MAX_VIDEO_RETRIES}...`)
                       setTimeout(() => {
-                        if (videoEl.src && currentVideoId) {
-                          const newUrl = videoEl.src.includes('annotated')
-                            ? `/api/video/annotated/${currentVideoId}?t=${Date.now()}`
-                            : `/api/video/compressed/${currentVideoId}?t=${Date.now()}`
-                          console.log('🔄 Attempting reload with:', newUrl)
+                        if (compressedVideoUrl) {
+                          const sep = compressedVideoUrl.includes('?') ? '&' : '?'
+                          const newUrl = `${compressedVideoUrl}${sep}_t=${Date.now()}`
+                          console.log('🔄 Attempting reload with:', newUrl.substring(0, 80) + '...')
                           videoEl.src = newUrl
                           videoEl.load()
                         }
-                      }, 1000)
+                      }, 2000 * videoRetryCount.current)
+                    } else if (videoRetryCount.current >= MAX_VIDEO_RETRIES) {
+                      console.warn('⛔ Max video retries reached, stopping reload attempts')
                     }
                   }}
                   onLoadStart={() => {
