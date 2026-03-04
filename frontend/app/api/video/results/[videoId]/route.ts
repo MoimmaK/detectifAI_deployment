@@ -6,9 +6,10 @@ export async function GET(
 ) {
   try {
     const videoId = params.videoId
-    
+
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
     // Forward request to Flask backend - try v2 endpoint first, fallback to legacy
-    let response = await fetch(`http://localhost:5000/api/v2/video/results/${videoId}`, {
+    let response = await fetch(`${API_URL}/api/v2/video/results/${videoId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -18,7 +19,7 @@ export async function GET(
     // If v2 endpoint fails, try legacy endpoint
     if (!response.ok) {
       console.log('v2 results endpoint failed, trying legacy endpoint')
-      response = await fetch(`http://localhost:5000/api/video/results/${videoId}`, {
+      response = await fetch(`${API_URL}/api/video/results/${videoId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

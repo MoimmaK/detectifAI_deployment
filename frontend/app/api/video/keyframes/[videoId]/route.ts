@@ -8,9 +8,10 @@ export async function GET(
     const videoId = params.videoId
     const { searchParams } = new URL(request.url)
     const filterDetections = searchParams.get('filter_detections') || 'false'
-    
+
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
     // Forward request to Flask backend for keyframes list - try v2 endpoint first, fallback to legacy
-    let response = await fetch(`http://localhost:5000/api/v2/video/keyframes/${videoId}?filter_detections=${filterDetections}`, {
+    let response = await fetch(`${API_URL}/api/v2/video/keyframes/${videoId}?filter_detections=${filterDetections}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -20,7 +21,7 @@ export async function GET(
     // If v2 endpoint fails, try legacy endpoint
     if (!response.ok) {
       console.log('v2 keyframes endpoint failed, trying legacy endpoint')
-      response = await fetch(`http://localhost:5000/api/video/keyframes/${videoId}`, {
+      response = await fetch(`${API_URL}/api/video/keyframes/${videoId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

@@ -8,7 +8,7 @@ export async function GET(
     const videoId = params.videoId
     
     // Forward request to Flask backend for detected faces
-    const response = await fetch(`http://localhost:5000/api/v2/video/faces/${videoId}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v2/video/faces/${videoId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth-config'
 import http from 'http'
 import https from 'https'
 
-const FLASK_API_URL = process.env.FLASK_API_URL || 'http://localhost:5000'
+const FLASK_API_URL = process.env.FLASK_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
 
 // Configure route for long-running report generation
 // Report generation can take 10-20+ minutes for complex videos (LLM loading + processing + MinIO upload)
