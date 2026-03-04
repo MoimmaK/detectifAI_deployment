@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const FLASK_API_URL = process.env.FLASK_API_URL || 'http://localhost:5000'
+const FLASK_API_URL = process.env.FLASK_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
 
 export async function GET(
   request: NextRequest,
@@ -8,7 +8,7 @@ export async function GET(
 ) {
   try {
     const eventId = params.eventId
-    
+
     // Forward request to Flask backend for event clip
     const response = await fetch(`${FLASK_API_URL}/api/event/clip/${eventId}`, {
       method: 'GET',
@@ -33,7 +33,7 @@ export async function GET(
 
     const headers = new Headers(response.headers)
     const contentType = headers.get('Content-Type') || 'video/mp4'
-    
+
     return new NextResponse(videoStream, {
       headers: {
         'Content-Type': contentType,
