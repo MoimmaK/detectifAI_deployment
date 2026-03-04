@@ -113,6 +113,7 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const liveVideoRef = useRef<HTMLImageElement>(null)
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const fetchingResultsRef = useRef(false)
   const liveStatsIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   // Real-time alerts hook — connects to SSE stream
@@ -685,21 +686,20 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
             statusData.meta_data?.status === 'failed'
 
           if (isCompleted) {
-            console.log('🎉 Processing completed! Fetching results...')
             if (pollIntervalRef.current) {
               clearInterval(pollIntervalRef.current)
               pollIntervalRef.current = null
             }
-            setUploadStatus("✅ Processing complete! Fetching results...")
+            if (fetchingResultsRef.current) return
+            fetchingResultsRef.current = true
 
-            // Clear processing state BEFORE fetching results to remove blur
+            console.log('🎉 Processing completed! Fetching results...')
+            setUploadStatus("✅ Processing complete! Fetching results...")
             setProcessing(false)
             setUploading(false)
 
-            // Refresh subscription usage counters (upload count changed)
             refreshSubscription().catch(() => { })
 
-            // Fetch results
             try {
               await fetchVideoResults(videoId)
               setUploadStatus("✅ Results loaded successfully!")
@@ -707,13 +707,13 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
               console.error('Failed to fetch results:', fetchError)
               setUploadStatus("⚠️ Processing complete, but failed to load results")
               if (videoId) {
-                console.log('🔄 Setting compressed video URL as fallback')
                 const apiBase = process.env.NEXT_PUBLIC_API_URL || ''
                 setCompressedVideoUrl(`${apiBase}/api/v3/video/compressed/${videoId}`)
               }
+            } finally {
+              fetchingResultsRef.current = false
             }
 
-            // Close modal after results are fetched
             setTimeout(() => {
               setShowUploadModal(false)
               setUploadStatus("")
@@ -985,7 +985,7 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
                   src={annotatedVideoUrl || compressedVideoUrl || undefined}
                   className="w-full h-48 object-contain bg-black"
                   controls
-                  preload="metadata"
+                  preload="auto"
                   playsInline
                   onLoadedMetadata={(e) => {
                     console.log('✅ Video metadata loaded successfully')
@@ -1349,9 +1349,9 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
                 setShowUploadModal(false)
                 setSelectedFile(null)
                 setUploadStatus("")
-                // Still fetch results in background if video was processed
-                if (currentVideoId) {
-                  fetchVideoResults(currentVideoId).catch(console.error)
+                if (currentVideoId && !fetchingResultsRef.current) {
+                  fetchingResultsRef.current = true
+                  fetchVideoResults(currentVideoId).catch(console.error).finally(() => { fetchingResultsRef.current = false })
                 }
               }}
             >
@@ -1438,21 +1438,19 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
                           (statusData.meta_data?.processing_progress === 100)
 
                         if (isCompleted) {
-                          // Clear polling
                           if (pollIntervalRef.current) {
                             clearInterval(pollIntervalRef.current)
                             pollIntervalRef.current = null
                           }
-
-                          // Clear processing state FIRST to remove blur
                           setProcessing(false)
                           setUploading(false)
                           setUploadStatus("✅ Processing complete!")
 
-                          // Fetch results
-                          await fetchVideoResults(currentVideoId)
+                          if (!fetchingResultsRef.current) {
+                            fetchingResultsRef.current = true
+                            try { await fetchVideoResults(currentVideoId) } finally { fetchingResultsRef.current = false }
+                          }
 
-                          // Close modal
                           setTimeout(() => {
                             setShowUploadModal(false)
                           }, 1500)
@@ -1482,9 +1480,9 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
                       setUploading(false)
                       setShowUploadModal(false)
                       setUploadStatus("")
-                      // Still try to fetch results in background
-                      if (currentVideoId) {
-                        fetchVideoResults(currentVideoId).catch(console.error)
+                      if (currentVideoId && !fetchingResultsRef.current) {
+                        fetchingResultsRef.current = true
+                        fetchVideoResults(currentVideoId).catch(console.error).finally(() => { fetchingResultsRef.current = false })
                       }
                     }}
                     className="w-full text-muted-foreground"
