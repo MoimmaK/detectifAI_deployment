@@ -610,13 +610,14 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
     try {
       const formData = new FormData()
       formData.append('video', file)
-      formData.append('configType', 'detectifai')
+      formData.append('config_type', 'detectifai')
 
       if (session?.user?.id) {
         formData.append('user_id', session.user.id)
       }
 
-      const response = await fetch('/api/video/upload', {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+      const response = await fetch(`${API_URL}/api/v2/video/upload`, {
         method: 'POST',
         body: formData,
       })
@@ -688,7 +689,7 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
             setUploading(false)
 
             // Refresh subscription usage counters (upload count changed)
-            refreshSubscription().catch(() => {})
+            refreshSubscription().catch(() => { })
 
             // Fetch results
             try {
@@ -791,10 +792,10 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
             {(() => {
               const videoUsage = getUsage("video_processing")
               if (!videoUsage || !hasSubscription) return null
-              
+
               // Pro users have unlimited uploads
               const isUnlimited = planId === "detectifai_pro" && videoUsage.limit >= 999999
-              
+
               if (isUnlimited) {
                 return (
                   <UsageTooltip limitType="video_processing">
@@ -809,7 +810,7 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
                   </UsageTooltip>
                 )
               }
-              
+
               const color = videoUsage.remaining <= 0 ? "text-red-500" :
                 videoUsage.percentage > 80 ? "text-amber-500" : "text-emerald-500"
               return (
@@ -817,10 +818,9 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
                   <div className="flex items-center gap-2 cursor-help">
                     <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden hidden sm:block">
                       <div
-                        className={`h-full rounded-full ${
-                          videoUsage.remaining <= 0 ? "bg-red-500" :
-                          videoUsage.percentage > 80 ? "bg-amber-500" : "bg-emerald-500"
-                        }`}
+                        className={`h-full rounded-full ${videoUsage.remaining <= 0 ? "bg-red-500" :
+                            videoUsage.percentage > 80 ? "bg-amber-500" : "bg-emerald-500"
+                          }`}
                         style={{ width: `${Math.min(100, videoUsage.percentage)}%` }}
                       />
                     </div>
@@ -849,39 +849,39 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
       <div className={`grid grid-cols-1 lg:grid-cols-2 gap-8 ${processing ? 'blur-sm' : ''}`}>
         {/* Search By Prompt Widget — Pro only (NLP search + image search) */}
         <FeatureGateOverlay gateId="nlp_search">
-        <Card className="shadow-lg border-3 shadow-gray-500/50 hover:shadow-gray-500/70 transition-shadow duration-300">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center space-x-2 text-xl">
-              <Search className="h-5 w-5 text-primary" />
-              <span>Search By Prompt</span>
-            </CardTitle>
-            <CardDescription>Use natural language to find specific moments in your surveillance footage</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-              <Input
-                placeholder="Describe what you're looking for..."
-                className="w-full pl-10 pr-10 py-3"
-              />
-              <button
-                type="button"
-                onClick={() => router.push("/search")}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
-                title="Search by image"
+          <Card className="shadow-lg border-3 shadow-gray-500/50 hover:shadow-gray-500/70 transition-shadow duration-300">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center space-x-2 text-xl">
+                <Search className="h-5 w-5 text-primary" />
+                <span>Search By Prompt</span>
+              </CardTitle>
+              <CardDescription>Use natural language to find specific moments in your surveillance footage</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                <Input
+                  placeholder="Describe what you're looking for..."
+                  className="w-full pl-10 pr-10 py-3"
+                />
+                <button
+                  type="button"
+                  onClick={() => router.push("/search")}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
+                  title="Search by image"
+                >
+                  <ImageIcon className="w-5 h-5" />
+                </button>
+              </div>
+              <Button
+                onClick={handleSearchClick}
+                className="w-full"
+                size="lg"
               >
-                <ImageIcon className="w-5 h-5" />
-              </button>
-            </div>
-            <Button
-              onClick={handleSearchClick}
-              className="w-full"
-              size="lg"
-            >
-              Search →
-            </Button>
-          </CardContent>
-        </Card>
+                Search →
+              </Button>
+            </CardContent>
+          </Card>
         </FeatureGateOverlay>
 
         {/* Video Footage Widget */}
@@ -1132,136 +1132,136 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
         </Card>
 
         {/* Generate Report Widget - only after video uploaded and analysis complete */}
-        <ReportWidget 
-          videoId={currentVideoId || undefined} 
-          processingComplete={!!currentVideoId && !processing} 
+        <ReportWidget
+          videoId={currentVideoId || undefined}
+          processingComplete={!!currentVideoId && !processing}
         />
 
         {/* Behavior Analysis Widget — Pro only */}
         <FeatureGateOverlay gateId="behavior_analysis">
-        <Card className="shadow-lg border-3 shadow-gray-500/50 hover:shadow-gray-500/70 transition-shadow duration-300">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center space-x-2 text-xl">
-              <AlertTriangle className="h-5 w-5 text-orange-500" />
-              <span>Behavior Analysis</span>
-            </CardTitle>
-            <CardDescription>Detected suspicious behaviors and activities</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {/* When locked, show a clean placeholder instead of real data */}
-              {!isGateUnlocked("behavior_analysis") ? (
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-3 p-3 bg-muted/30 border border-border rounded-lg">
-                    <div className="w-3 h-3 bg-muted rounded-full"></div>
-                    <div>
-                      <span className="text-sm font-medium text-muted-foreground">Behavior Detection</span>
-                      <p className="text-xs text-muted-foreground">Upgrade to Pro to detect fighting, accidents &amp; more</p>
+          <Card className="shadow-lg border-3 shadow-gray-500/50 hover:shadow-gray-500/70 transition-shadow duration-300">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center space-x-2 text-xl">
+                <AlertTriangle className="h-5 w-5 text-orange-500" />
+                <span>Behavior Analysis</span>
+              </CardTitle>
+              <CardDescription>Detected suspicious behaviors and activities</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* When locked, show a clean placeholder instead of real data */}
+                {!isGateUnlocked("behavior_analysis") ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-3 p-3 bg-muted/30 border border-border rounded-lg">
+                      <div className="w-3 h-3 bg-muted rounded-full"></div>
+                      <div>
+                        <span className="text-sm font-medium text-muted-foreground">Behavior Detection</span>
+                        <p className="text-xs text-muted-foreground">Upgrade to Pro to detect fighting, accidents &amp; more</p>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-muted/20 rounded-lg space-y-2">
+                      <div className="h-3 w-2/3 bg-muted/40 rounded animate-pulse"></div>
+                      <div className="h-3 w-1/2 bg-muted/40 rounded animate-pulse"></div>
+                      <div className="h-3 w-3/4 bg-muted/40 rounded animate-pulse"></div>
                     </div>
                   </div>
-                  <div className="p-3 bg-muted/20 rounded-lg space-y-2">
-                    <div className="h-3 w-2/3 bg-muted/40 rounded animate-pulse"></div>
-                    <div className="h-3 w-1/2 bg-muted/40 rounded animate-pulse"></div>
-                    <div className="h-3 w-3/4 bg-muted/40 rounded animate-pulse"></div>
-                  </div>
-                </div>
-              ) : videoResults && videoResults.behaviors_available && videoResults.behaviors_count > 0 ? (
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-3 p-3 bg-orange-500/10 border border-orange-500/20 rounded-lg">
-                    <div className="w-3 h-3 bg-orange-500 rounded-full animate-pulse"></div>
-                    <div className="flex-1">
-                      <span className="text-sm font-medium">Suspicious Behavior Detected</span>
-                      <p className="text-xs text-muted-foreground">{videoResults.behaviors_count} behavior event(s) detected</p>
+                ) : videoResults && videoResults.behaviors_available && videoResults.behaviors_count > 0 ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-3 p-3 bg-orange-500/10 border border-orange-500/20 rounded-lg">
+                      <div className="w-3 h-3 bg-orange-500 rounded-full animate-pulse"></div>
+                      <div className="flex-1">
+                        <span className="text-sm font-medium">Suspicious Behavior Detected</span>
+                        <p className="text-xs text-muted-foreground">{videoResults.behaviors_count} behavior event(s) detected</p>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Show behavior types */}
-                  {videoResults.behaviors_summary?.by_type && Object.keys(videoResults.behaviors_summary.by_type).length > 0 && (
-                    <div className="p-3 bg-muted/50 rounded-lg space-y-2">
-                      <p className="text-xs font-medium mb-2">Detected Behaviors:</p>
-                      <div className="space-y-2">
-                        {Object.entries(videoResults.behaviors_summary.by_type).map(([behaviorType, count]) => {
-                          const behaviorLabels: Record<string, string> = {
-                            'fighting': 'Fighting',
-                            'road_accident': 'Road Accident',
-                            'wallclimb': 'Wall Climbing',
-                            'accident': 'Accident',
-                            'climbing': 'Climbing'
-                          }
-                          const label = behaviorLabels[behaviorType] || behaviorType.charAt(0).toUpperCase() + behaviorType.slice(1).replace('_', ' ')
-                          const colorClass = behaviorType === 'fighting' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' :
-                            behaviorType === 'road_accident' ? 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200' :
-                              'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
+                    {/* Show behavior types */}
+                    {videoResults.behaviors_summary?.by_type && Object.keys(videoResults.behaviors_summary.by_type).length > 0 && (
+                      <div className="p-3 bg-muted/50 rounded-lg space-y-2">
+                        <p className="text-xs font-medium mb-2">Detected Behaviors:</p>
+                        <div className="space-y-2">
+                          {Object.entries(videoResults.behaviors_summary.by_type).map(([behaviorType, count]) => {
+                            const behaviorLabels: Record<string, string> = {
+                              'fighting': 'Fighting',
+                              'road_accident': 'Road Accident',
+                              'wallclimb': 'Wall Climbing',
+                              'accident': 'Accident',
+                              'climbing': 'Climbing'
+                            }
+                            const label = behaviorLabels[behaviorType] || behaviorType.charAt(0).toUpperCase() + behaviorType.slice(1).replace('_', ' ')
+                            const colorClass = behaviorType === 'fighting' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' :
+                              behaviorType === 'road_accident' ? 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200' :
+                                'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
 
-                          return (
-                            <div key={behaviorType} className="flex items-center justify-between p-2 bg-background rounded border">
-                              <div className="flex items-center space-x-2">
-                                <span className={`text-xs ${colorClass} px-2 py-1 rounded font-medium`}>
-                                  {label}
-                                </span>
-                                <span className="text-xs text-muted-foreground">
-                                  {count as number} occurrence{(count as number) > 1 ? 's' : ''}
-                                </span>
+                            return (
+                              <div key={behaviorType} className="flex items-center justify-between p-2 bg-background rounded border">
+                                <div className="flex items-center space-x-2">
+                                  <span className={`text-xs ${colorClass} px-2 py-1 rounded font-medium`}>
+                                    {label}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {count as number} occurrence{(count as number) > 1 ? 's' : ''}
+                                  </span>
+                                </div>
                               </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-
-                      {videoResults.behaviors_summary.most_common && (
-                        <div className="mt-2 pt-2 border-t">
-                          <p className="text-xs text-muted-foreground">
-                            Most common: <span className="font-medium capitalize">{videoResults.behaviors_summary.most_common.replace('_', ' ')}</span>
-                          </p>
-                          {videoResults.behaviors_summary.average_confidence && (
-                            <p className="text-xs text-muted-foreground">
-                              Avg. confidence: <span className="font-medium">{(videoResults.behaviors_summary.average_confidence * 100).toFixed(1)}%</span>
-                            </p>
-                          )}
+                            )
+                          })}
                         </div>
-                      )}
-                    </div>
-                  )}
 
-                  {/* Show recent behavior events */}
-                  {videoResults.behavior_events && videoResults.behavior_events.length > 0 && (
-                    <div className="p-2 bg-muted/30 rounded-lg">
-                      <p className="text-xs font-medium mb-2">Recent Events:</p>
-                      <div className="space-y-1 max-h-32 overflow-y-auto">
-                        {videoResults.behavior_events.slice(0, 5).map((event, idx) => {
-                          const behaviorType = event.event_type.replace('behavior_', '')
-                          const behaviorLabels: Record<string, string> = {
-                            'fighting': 'Fighting',
-                            'road_accident': 'Road Accident',
-                            'wallclimb': 'Wall Climbing'
-                          }
-                          const label = behaviorLabels[behaviorType] || behaviorType.charAt(0).toUpperCase() + behaviorType.slice(1)
-                          const startTime = (event.start_timestamp_ms / 1000).toFixed(1)
-                          const endTime = (event.end_timestamp_ms / 1000).toFixed(1)
-
-                          return (
-                            <div key={idx} className="text-xs text-muted-foreground flex items-center justify-between">
-                              <span>{label}</span>
-                              <span className="ml-2">{startTime}s - {endTime}s ({(event.confidence_score * 100).toFixed(0)}%)</span>
-                            </div>
-                          )
-                        })}
+                        {videoResults.behaviors_summary.most_common && (
+                          <div className="mt-2 pt-2 border-t">
+                            <p className="text-xs text-muted-foreground">
+                              Most common: <span className="font-medium capitalize">{videoResults.behaviors_summary.most_common.replace('_', ' ')}</span>
+                            </p>
+                            {videoResults.behaviors_summary.average_confidence && (
+                              <p className="text-xs text-muted-foreground">
+                                Avg. confidence: <span className="font-medium">{(videoResults.behaviors_summary.average_confidence * 100).toFixed(1)}%</span>
+                              </p>
+                            )}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="flex items-center space-x-3 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <div>
-                    <span className="text-sm font-medium">No Suspicious Behaviors</span>
-                    <p className="text-xs text-muted-foreground">No behavior anomalies detected</p>
+                    )}
+
+                    {/* Show recent behavior events */}
+                    {videoResults.behavior_events && videoResults.behavior_events.length > 0 && (
+                      <div className="p-2 bg-muted/30 rounded-lg">
+                        <p className="text-xs font-medium mb-2">Recent Events:</p>
+                        <div className="space-y-1 max-h-32 overflow-y-auto">
+                          {videoResults.behavior_events.slice(0, 5).map((event, idx) => {
+                            const behaviorType = event.event_type.replace('behavior_', '')
+                            const behaviorLabels: Record<string, string> = {
+                              'fighting': 'Fighting',
+                              'road_accident': 'Road Accident',
+                              'wallclimb': 'Wall Climbing'
+                            }
+                            const label = behaviorLabels[behaviorType] || behaviorType.charAt(0).toUpperCase() + behaviorType.slice(1)
+                            const startTime = (event.start_timestamp_ms / 1000).toFixed(1)
+                            const endTime = (event.end_timestamp_ms / 1000).toFixed(1)
+
+                            return (
+                              <div key={idx} className="text-xs text-muted-foreground flex items-center justify-between">
+                                <span>{label}</span>
+                                <span className="ml-2">{startTime}s - {endTime}s ({(event.confidence_score * 100).toFixed(0)}%)</span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                ) : (
+                  <div className="flex items-center space-x-3 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <div>
+                      <span className="text-sm font-medium">No Suspicious Behaviors</span>
+                      <p className="text-xs text-muted-foreground">No behavior anomalies detected</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </FeatureGateOverlay>
 
         {/* Real-Time Alerts Widget — Live SSE-powered alerts */}
