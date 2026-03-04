@@ -53,6 +53,7 @@ interface VideoResults {
   compressed_video_available?: boolean
   annotated_video_url?: string
   annotated_video_available?: boolean
+  keyframes_sample?: any[]
 }
 
 interface Keyframe {
@@ -407,7 +408,7 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
         setAnnotatedVideoUrl(null)
       }
 
-      // Step 3: Fetch keyframes with detections (use presigned URLs from status if available)
+      // Step 3: Fetch ALL keyframes (no detection filtering — show all frames, mark detections)
       let keyframesToSet: Keyframe[] = []
 
       // First try to use keyframes from status if available
@@ -416,26 +417,25 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
         keyframesToSet = statusData.keyframes_urls.map((kf: any) => ({
           filename: kf.filename || `frame_${kf.frame_number || 0}.jpg`,
           presigned_url: kf.presigned_url,
-          url: kf.api_url || kf.url || kf.presigned_url, // Prefer API URL
+          url: kf.api_url || kf.url || kf.presigned_url,
           api_url: kf.api_url,
           minio_url: kf.minio_url,
           timestamp: kf.timestamp || 0,
-          has_detections: false // Will be updated from detections
+          has_detections: false
         }))
       }
 
-      // Also fetch from keyframes endpoint for detection info
-      const keyframesResponse = await fetch(`/api/video/keyframes/${videoId}?filter_detections=true`)
+      // Fetch ALL keyframes (filter_detections=false) so we always show frames
+      const keyframesResponse = await fetch(`/api/video/keyframes/${videoId}?filter_detections=false`)
       if (keyframesResponse.ok) {
         const keyframesData = await keyframesResponse.json()
         console.log('🖼️ Keyframes data:', keyframesData)
 
         if (keyframesData.keyframes && keyframesData.keyframes.length > 0) {
-          // Merge detection info with keyframes
           const keyframesWithDetections = keyframesData.keyframes.map((kf: any) => ({
             filename: kf.filename,
             presigned_url: kf.presigned_url || kf.url,
-            url: kf.api_url || kf.minio_url || kf.url || kf.presigned_url, // Prefer API URL
+            url: kf.api_url || kf.minio_url || kf.url || kf.presigned_url,
             api_url: kf.api_url,
             minio_url: kf.minio_url,
             timestamp: kf.timestamp || 0,
@@ -443,14 +443,24 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
             detection_count: kf.detection_count || 0,
             objects: kf.objects || []
           }))
-
-          // Use keyframes from endpoint if they have detection info, otherwise use status keyframes
-          if (keyframesWithDetections.some((kf: Keyframe) => kf.has_detections)) {
-            keyframesToSet = keyframesWithDetections
-          } else if (keyframesToSet.length === 0) {
-            keyframesToSet = keyframesWithDetections
-          }
+          keyframesToSet = keyframesWithDetections
         }
+      }
+
+      // Fallback: extract keyframes from comprehensive results if endpoint returned none
+      if (keyframesToSet.length === 0 && videoResultsData?.keyframes_sample && Array.isArray(videoResultsData.keyframes_sample)) {
+        console.log('🔄 Using keyframes from comprehensive results:', videoResultsData.keyframes_sample.length)
+        keyframesToSet = videoResultsData.keyframes_sample.map((kf: any) => ({
+          filename: kf.filename,
+          presigned_url: kf.presigned_url || kf.url,
+          url: kf.api_url || kf.minio_url || kf.url || kf.presigned_url,
+          api_url: kf.api_url,
+          minio_url: kf.minio_url,
+          timestamp: kf.timestamp || 0,
+          has_detections: kf.has_detections || false,
+          detection_count: kf.detection_count || 0,
+          objects: kf.objects || []
+        }))
       }
 
       if (keyframesToSet.length > 0) {
