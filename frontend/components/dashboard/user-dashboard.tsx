@@ -342,18 +342,10 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
       const statusData = await statusResponse.json()
       console.log('📊 Status data received:', JSON.stringify(statusData, null, 2))
 
-      // Prefer presigned URL (direct from MinIO, avoids Vercel proxy size limits + redirect issues)
-      if (statusData.compressed_video_presigned_url) {
-        setCompressedVideoUrl(statusData.compressed_video_presigned_url)
-        console.log('✅ Using presigned URL for compressed video')
-      } else if (statusData.compressed_video_url?.startsWith('http')) {
-        setCompressedVideoUrl(statusData.compressed_video_url)
-        console.log('✅ Using direct URL for compressed video')
-      } else {
-        const apiBase = process.env.NEXT_PUBLIC_API_URL || ''
-        setCompressedVideoUrl(`${apiBase}/api/v3/video/compressed/${videoId}`)
-        console.log('✅ Using backend direct URL for compressed video')
-      }
+      // Use backend streaming endpoint (streams from MinIO with CORS headers, no redirect)
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || ''
+      setCompressedVideoUrl(`${apiBase}/api/v4/video/stream/${videoId}`)
+      console.log('✅ Using backend streaming URL for compressed video')
 
       // Step 2: Try to fetch comprehensive results with proper error handling
       console.log('📋 Fetching comprehensive results...')
@@ -365,14 +357,8 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
           videoResultsData = await resultsResponse.json() as VideoResults
           console.log('📋 Comprehensive results received:', JSON.stringify(videoResultsData, null, 2))
 
-          // Update compressed video URL from results if available (prefer presigned)
-          if (videoResultsData.compressed_video_presigned_url) {
-            setCompressedVideoUrl(videoResultsData.compressed_video_presigned_url)
-            console.log('✅ Updated compressed video URL from results (presigned)')
-          } else if (videoResultsData.compressed_video_url?.startsWith('http')) {
-            setCompressedVideoUrl(videoResultsData.compressed_video_url)
-            console.log('✅ Updated compressed video URL from results')
-          }
+          // Video URL already set to streaming endpoint, no need to override from results
+          console.log('✅ Compressed video URL already set to streaming endpoint')
         } else {
           const errorText = await resultsResponse.text()
           console.warn('⚠️ Failed to fetch comprehensive results:', resultsResponse.status, errorText)
@@ -528,27 +514,8 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
 
     } catch (err) {
       console.error('❌ Error fetching video results:', err)
-      try {
-        const statusResponse = await fetch(`/api/video/status/${videoId}`)
-        if (statusResponse.ok) {
-          const statusData = await statusResponse.json()
-          if (statusData.compressed_video_presigned_url) {
-            setCompressedVideoUrl(statusData.compressed_video_presigned_url)
-          } else if (statusData.compressed_video_url?.startsWith('http')) {
-            setCompressedVideoUrl(statusData.compressed_video_url)
-          } else {
-            const apiBase = process.env.NEXT_PUBLIC_API_URL || ''
-            setCompressedVideoUrl(`${apiBase}/api/v3/video/compressed/${videoId}`)
-          }
-        } else {
-          const apiBase = process.env.NEXT_PUBLIC_API_URL || ''
-          setCompressedVideoUrl(`${apiBase}/api/v3/video/compressed/${videoId}`)
-        }
-      } catch (statusErr) {
-        console.error('❌ Failed to fetch status as fallback:', statusErr)
-        const apiBase = process.env.NEXT_PUBLIC_API_URL || ''
-        setCompressedVideoUrl(`${apiBase}/api/v3/video/compressed/${videoId}`)
-      }
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || ''
+      setCompressedVideoUrl(`${apiBase}/api/v4/video/stream/${videoId}`)
     }
   }
 
@@ -708,7 +675,7 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
               setUploadStatus("⚠️ Processing complete, but failed to load results")
               if (videoId) {
                 const apiBase = process.env.NEXT_PUBLIC_API_URL || ''
-                setCompressedVideoUrl(`${apiBase}/api/v3/video/compressed/${videoId}`)
+                setCompressedVideoUrl(`${apiBase}/api/v4/video/stream/${videoId}`)
               }
             } finally {
               fetchingResultsRef.current = false
