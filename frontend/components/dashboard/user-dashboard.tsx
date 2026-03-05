@@ -113,7 +113,7 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const liveVideoRef = useRef<HTMLImageElement>(null)
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
-  const fetchingResultsRef = useRef(false)
+  const pollStoppedRef = useRef(false)
   const liveStatsIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   // Real-time alerts hook — connects to SSE stream
@@ -612,59 +612,46 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
       setUploadStatus(`✅ Upload successful! Processing video...`)
       setCurrentVideoId(videoId)
 
-      // Don't set video URL yet — wait until processing completes to avoid
-      // hammering the proxy while the video is still being processed.
       videoRetryCount.current = 0
+      pollStoppedRef.current = false
 
-      // Poll for processing completion
+      const stopPolling = () => {
+        pollStoppedRef.current = true
+        if (pollIntervalRef.current) {
+          clearInterval(pollIntervalRef.current)
+          pollIntervalRef.current = null
+        }
+      }
+
       pollIntervalRef.current = setInterval(async () => {
+        if (pollStoppedRef.current) return
+
         try {
           const statusResponse = await fetch(`/api/video/status/${videoId}`)
+          if (pollStoppedRef.current) return
           const statusData = await statusResponse.json()
+          if (pollStoppedRef.current) return
 
-          // Debug logging
-          console.log('Status check:', {
-            status: statusData.status,
-            meta_status: statusData.meta_data?.processing_status,
-            progress: statusData.processing_progress || statusData.meta_data?.processing_progress,
-            fullData: statusData
-          })
-
-          // Update UI with processing status
           const progress = statusData.processing_progress || statusData.meta_data?.processing_progress || statusData.progress || 0
           const message = statusData.processing_message || statusData.meta_data?.processing_message || statusData.message || 'Processing...'
           setUploadStatus(`${message} (${progress}%)`)
 
-          // Check for completion - check multiple possible fields
-          // More comprehensive completion check
           const isCompleted =
-            (statusData.status === 'completed') ||
-            (statusData.processing_status === 'completed') ||
-            (statusData.meta_data?.processing_status === 'completed') ||
-            (statusData.progress === 100 && statusData.status !== 'processing') ||
-            (statusData.processing_progress === 100 && statusData.status !== 'processing') ||
-            (statusData.meta_data?.processing_progress === 100 && statusData.meta_data?.processing_status !== 'processing') ||
-            (statusData.meta_data?.progress === 100 && statusData.meta_data?.status !== 'processing')
+            statusData.status === 'completed' ||
+            statusData.processing_status === 'completed' ||
+            statusData.meta_data?.processing_status === 'completed'
 
           const isFailed =
             statusData.status === 'failed' ||
             statusData.processing_status === 'failed' ||
-            statusData.meta_data?.processing_status === 'failed' ||
-            statusData.meta_data?.status === 'failed'
+            statusData.meta_data?.processing_status === 'failed'
 
           if (isCompleted) {
-            if (pollIntervalRef.current) {
-              clearInterval(pollIntervalRef.current)
-              pollIntervalRef.current = null
-            }
-            if (fetchingResultsRef.current) return
-            fetchingResultsRef.current = true
-
+            stopPolling()
             console.log('🎉 Processing completed! Fetching results...')
             setUploadStatus("✅ Processing complete! Fetching results...")
             setProcessing(false)
             setUploading(false)
-
             refreshSubscription().catch(() => { })
 
             try {
@@ -673,12 +660,8 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
             } catch (fetchError) {
               console.error('Failed to fetch results:', fetchError)
               setUploadStatus("⚠️ Processing complete, but failed to load results")
-              if (videoId) {
-                const apiBase = process.env.NEXT_PUBLIC_API_URL || ''
-                setCompressedVideoUrl(`${apiBase}/api/v4/video/stream/${videoId}`)
-              }
-            } finally {
-              fetchingResultsRef.current = false
+              const apiBase = process.env.NEXT_PUBLIC_API_URL || ''
+              setCompressedVideoUrl(`${apiBase}/api/v4/video/stream/${videoId}`)
             }
 
             setTimeout(() => {
@@ -687,25 +670,16 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
             }, 2000)
 
           } else if (isFailed) {
-            console.log('❌ Processing failed')
-            if (pollIntervalRef.current) {
-              clearInterval(pollIntervalRef.current)
-              pollIntervalRef.current = null
-            }
+            stopPolling()
             const errorMessage = statusData.message || statusData.meta_data?.error_message || statusData.error || 'Unknown processing error'
             setUploadStatus(`❌ Processing failed: ${errorMessage}`)
             setProcessing(false)
             setUploading(false)
-          } else {
-            // Update progress message
-            const progress = statusData.progress || statusData.processing_progress || statusData.meta_data?.progress || statusData.meta_data?.processing_progress || 0
-            const message = statusData.message || statusData.meta_data?.message || 'Processing...'
-            setUploadStatus(`🔄 ${message} (${Math.round(progress)}%)`)
           }
         } catch (err) {
           console.error('Polling error:', err)
         }
-      }, 2000) // Poll every 2 seconds
+      }, 3000)
 
     } catch (err) {
       setUploadStatus(`❌ Error: ${err instanceof Error ? err.message : 'Upload failed'}`)
@@ -1316,9 +1290,8 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
                 setShowUploadModal(false)
                 setSelectedFile(null)
                 setUploadStatus("")
-                if (currentVideoId && !fetchingResultsRef.current) {
-                  fetchingResultsRef.current = true
-                  fetchVideoResults(currentVideoId).catch(console.error).finally(() => { fetchingResultsRef.current = false })
+                if (currentVideoId) {
+                  fetchVideoResults(currentVideoId).catch(console.error)
                 }
               }}
             >
@@ -1413,10 +1386,7 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
                           setUploading(false)
                           setUploadStatus("✅ Processing complete!")
 
-                          if (!fetchingResultsRef.current) {
-                            fetchingResultsRef.current = true
-                            try { await fetchVideoResults(currentVideoId) } finally { fetchingResultsRef.current = false }
-                          }
+                          await fetchVideoResults(currentVideoId)
 
                           setTimeout(() => {
                             setShowUploadModal(false)
@@ -1447,9 +1417,8 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
                       setUploading(false)
                       setShowUploadModal(false)
                       setUploadStatus("")
-                      if (currentVideoId && !fetchingResultsRef.current) {
-                        fetchingResultsRef.current = true
-                        fetchVideoResults(currentVideoId).catch(console.error).finally(() => { fetchingResultsRef.current = false })
+                      if (currentVideoId) {
+                        fetchVideoResults(currentVideoId).catch(console.error)
                       }
                     }}
                     className="w-full text-muted-foreground"
