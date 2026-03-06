@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Search, Upload, Play, Pause, SkipBack, SkipForward, Volume2, FileText, AlertTriangle, Loader2, X, ImageIcon, Video, Square } from "lucide-react"
+import { Search, Upload, Play, Pause, SkipBack, SkipForward, Volume2, FileText, AlertTriangle, Loader2, X, ImageIcon, Video, Square, Shield } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
 import { useState, useRef, useEffect } from "react"
@@ -1077,6 +1077,50 @@ export function UserDashboard({ userRole }: UserDashboardProps) {
                     )
                   })}
                 </div>
+              </div>
+            )}
+            {/* Detection Results — visible to all plans */}
+            {videoResults && videoResults.detections_available && videoResults.detections_count > 0 && (
+              <div className="mt-4 border rounded-lg p-3 bg-red-500/5 border-red-500/20">
+                <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-red-500" />
+                  Object Detection Results
+                  <span className="ml-auto text-xs font-normal text-muted-foreground">
+                    {videoResults.detections_count} detection{videoResults.detections_count !== 1 ? 's' : ''}
+                  </span>
+                </h4>
+
+                {videoResults.detections_summary?.by_class && Object.keys(videoResults.detections_summary.by_class).length > 0 ? (
+                  <div className="space-y-2">
+                    {Object.entries(videoResults.detections_summary.by_class).map(([className, count]) => {
+                      const threatObjects = videoResults.detections_summary?.threat_objects || []
+                      const isThreat = threatObjects.includes(className.toLowerCase())
+                      return (
+                        <div key={className} className="flex items-center justify-between p-2 bg-background rounded border">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-2.5 h-2.5 rounded-full ${isThreat ? 'bg-red-500' : 'bg-yellow-500'}`} />
+                            <span className="text-sm font-medium capitalize">{className}</span>
+                            {isThreat && (
+                              <span className="text-[10px] bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 px-1.5 py-0.5 rounded font-medium">THREAT</span>
+                            )}
+                          </div>
+                          <span className="text-xs text-muted-foreground font-mono">
+                            {count as number}x
+                          </span>
+                        </div>
+                      )
+                    })}
+                    {videoResults.detections_summary?.average_confidence != null && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Avg. confidence: {(videoResults.detections_summary.average_confidence * 100).toFixed(1)}%
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    {videoResults.detections_count} object{videoResults.detections_count !== 1 ? 's' : ''} detected in video
+                  </p>
+                )}
               </div>
             )}
           </CardContent>
